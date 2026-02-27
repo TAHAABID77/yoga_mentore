@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:yoga_mentore/Providers/user_provider.dart';
 import 'main_layout.dart';
 
-/// Screen handling both Login and Sign-up functionality
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+/// Screen handling both Login and Sign-up functionality (AuthScreen se rename kiya gaya hai)
+class LoginSignupScreen extends StatefulWidget {
+  const LoginSignupScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<LoginSignupScreen> createState() => _LoginSignupScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
-  // Toggle between Login and Sign-up forms
+class _LoginSignupScreenState extends State<LoginSignupScreen> {
+  // Toggle between Login and Sign-up forms - Login aur Signup switch krne ke liye
   bool isLogin = true;
 
-  // Global keys for form validation
+  // Global keys for form validation - Form ki validation check krne ke liye keys
   final _loginKey = GlobalKey<FormState>();
   final _signupKey = GlobalKey<FormState>();
 
-  // Visibility states for password fields
+  // Visibility states for password fields - Password dikhane ya chupane ke liye
   bool _loginObscure = true;
   bool _signupObscure = true;
   bool _confirmObscure = true;
 
-  // Controllers for text input fields
+  // Controllers for text input fields - Text fields ka data access krne ke liye
   final TextEditingController _loginEmail = TextEditingController();
   final TextEditingController _signupName = TextEditingController();
   final TextEditingController _signupPass = TextEditingController();
@@ -31,7 +33,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // Main background gradient for the auth screen
+        // Main background gradient for the auth screen - Background ka gradient style
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF102213), Color(0xFF19331E)],
@@ -59,6 +61,7 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // App ka Name/Logo
                   const Text(
                     "Yoga Mentor",
                     style: TextStyle(
@@ -68,10 +71,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Conditionally show either Login or Signup form
+                  // Conditionally show either Login or Signup form - Login ya Signup form dikhana
                   isLogin ? _loginForm() : _signupForm(),
                   const SizedBox(height: 20),
-                  // Toggle button to switch between Login and Signup
+                  // Toggle button to switch between Login and Signup - View switch krne ka button
                   GestureDetector(
                     onTap: () {
                       setState(() => isLogin = !isLogin);
@@ -96,6 +99,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   // ---------------- LOGIN FORM ----------------
+  // Login krne ka form
   Widget _loginForm() {
     return Form(
       key: _loginKey,
@@ -119,23 +123,26 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: 24),
           _mainButton("Login", () {
-            // Basic validation check before navigation
+            // Basic validation check before navigation - Validation ke baad main screen par lejana
             if (_loginKey.currentState!.validate()) {
               final name = _loginEmail.text.split('@')[0];
+              Provider.of<UserProvider>(
+                context,
+                listen: false,
+              ).updateName(name);
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => MainLayout(userName: name)),
+                MaterialPageRoute(builder: (_) => const MainLayout()),
               );
             }
           }),
-          _divider(),
-          _googleAppleButtons(),
         ],
       ),
     );
   }
 
   // ---------------- SIGN UP FORM ----------------
+  // Naya account banane ka form
   Widget _signupForm() {
     return Form(
       key: _signupKey,
@@ -175,26 +182,26 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: 24),
           _mainButton("Create Account", () {
-            // Validate sign-up details
+            // Validate sign-up details - Signup details check krna
             if (_signupKey.currentState!.validate()) {
+              Provider.of<UserProvider>(
+                context,
+                listen: false,
+              ).updateName(_signupName.text);
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => MainLayout(userName: _signupName.text),
-                ),
+                MaterialPageRoute(builder: (_) => const MainLayout()),
               );
             }
           }),
-          _divider(),
-          _googleAppleButtons(),
         ],
       ),
     );
   }
 
   // ---------------- UI UTILITIES ----------------
-  
-  /// Reusable primary button component
+
+  /// Reusable primary button component - Har jagah use hone wala main button
   Widget _mainButton(String text, VoidCallback onTap) {
     return SizedBox(
       width: double.infinity,
@@ -203,62 +210,20 @@ class _AuthScreenState extends State<AuthScreen> {
           backgroundColor: const Color(0xFF13ec37),
           foregroundColor: const Color(0xFF102213),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         onPressed: onTap,
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        child: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
       ),
     );
   }
 
-  /// Divider with 'OR' text for alternative login methods
-  Widget _divider() {
-    return const Column(
-      children: [
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(child: Divider(color: Colors.white24)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text("OR", style: TextStyle(color: Colors.white54)),
-            ),
-            Expanded(child: Divider(color: Colors.white24)),
-          ],
-        ),
-        SizedBox(height: 16),
-      ],
-    );
-  }
-
-  /// Social authentication buttons (currently Google only)
-  Widget _googleAppleButtons() {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF13ec37)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              // Social login placeholder
-            },
-            icon: Image.network(
-              "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/512px-Google_2015_logo.svg.png",
-              height: 20,
-            ),
-            label: const Text("Continue with Google"),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Reusable text input field with validation and styling
+  /// Reusable text input field with validation and styling - Custom input field
   Widget _field({
     required String hint,
     required IconData icon,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:yoga_mentore/Providers/user_provider.dart';
 
 /// Screen displaying a searchable library of yoga poses
 class PoseLibraryPage extends StatefulWidget {
@@ -9,14 +11,9 @@ class PoseLibraryPage extends StatefulWidget {
 }
 
 class _PoseLibraryPageState extends State<PoseLibraryPage> {
-  // Premium Yoga Theme Colors for consistent branding
-  static const Color primaryGreen = Color(0xFF13EC37);
-  static const Color backgroundDark = Color(0xFF0C1B0E);
-  static const Color surfaceDark = Color(0xFF162A19);
-  static const Color accentGreen = Color(0xFF92C99B);
-
-  // Controllers for scrolling
+  // Controllers for scrolling and search
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
 
   // Keys for each category section
   final GlobalKey _beginnerKey = GlobalKey();
@@ -75,6 +72,36 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
     },
   ];
 
+  void _searchPose(String query) {
+    if (query.isEmpty) return;
+
+    final foundPose = poses.firstWhere(
+      (p) => p['title'].toString().toLowerCase().contains(query.toLowerCase()),
+      orElse: () => {},
+    );
+
+    if (foundPose.isNotEmpty) {
+      String level = foundPose['level'];
+      if (level == 'Beginner') {
+        _scrollToSection(_beginnerKey);
+      } else if (level == 'Intermediate') {
+        _scrollToSection(_intermediateKey);
+      } else if (level == 'Advanced') {
+        _scrollToSection(_advancedKey);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Found: ${foundPose['title']} in $level section"),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Pose not found!")));
+    }
+  }
+
   void _scrollToSection(GlobalKey key) {
     final context = key.currentContext;
     if (context != null) {
@@ -88,16 +115,18 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = userProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: backgroundDark,
       body: SafeArea(
         child: CustomScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Sticky header with search and categories
             SliverAppBar(
-              backgroundColor: backgroundDark,
+              backgroundColor: theme.scaffoldBackgroundColor,
               floating: true,
               pinned: true,
               elevation: 0,
@@ -106,22 +135,25 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'POSE LIBRARY',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.textTheme.headlineMedium?.color,
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Find the perfect pose for your practice today.',
-                        style: TextStyle(color: accentGreen, fontSize: 14),
+                        style: TextStyle(
+                          color: theme.primaryColor.withValues(alpha: 0.7),
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -130,68 +162,62 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(100),
                 child: Container(
-                  color: backgroundDark,
+                  color: theme.scaffoldBackgroundColor,
                   child: Column(
                     children: [
-                      _buildSearchBar(),
-                      _buildCategoryChips(),
+                      _buildSearchBar(theme, isDark),
+                      _buildCategoryChips(theme, isDark),
                       const SizedBox(height: 10),
                     ],
                   ),
                 ),
               ),
             ),
-            // Beginner Section
             SliverToBoxAdapter(
               key: _beginnerKey,
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 child: Text(
                   'BEGINNER',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.textTheme.titleLarge?.color,
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                   ),
                 ),
               ),
             ),
-            _buildGridSection('Beginner'),
-
-            // Intermediate Section
+            _buildGridSection('Beginner', theme, isDark),
             SliverToBoxAdapter(
               key: _intermediateKey,
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 child: Text(
                   'INTERMEDIATE',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.textTheme.titleLarge?.color,
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                   ),
                 ),
               ),
             ),
-            _buildGridSection('Intermediate'),
-
-            // Advanced Section
+            _buildGridSection('Intermediate', theme, isDark),
             SliverToBoxAdapter(
               key: _advancedKey,
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 child: Text(
                   'ADVANCED / EXPERT',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.textTheme.titleLarge?.color,
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                   ),
                 ),
               ),
             ),
-            _buildGridSection('Advanced'),
-
+            _buildGridSection('Advanced', theme, isDark),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
@@ -199,7 +225,7 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
     );
   }
 
-  Widget _buildGridSection(String level) {
+  Widget _buildGridSection(String level, ThemeData theme, bool isDark) {
     final filteredPoses = poses.where((p) => p['level'] == level).toList();
 
     return SliverPadding(
@@ -221,49 +247,61 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
             pose['level'],
             pose['color'],
             pose['image'],
+            theme,
+            isDark,
           );
         }, childCount: filteredPoses.length),
       ),
     );
   }
 
-  /// Search bar component with custom styling
-  Widget _buildSearchBar() {
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildSearchBar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: primaryGreen.withValues(alpha: 0.05),
+              color: theme.primaryColor.withValues(alpha: 0.05),
               blurRadius: 20,
               spreadRadius: 2,
             ),
           ],
         ),
         child: TextField(
-          style: const TextStyle(color: Colors.white),
+          controller: _searchController,
+          onSubmitted: (value) => _searchPose(value),
+          style: TextStyle(color: theme.textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: 'Search poses...',
-            hintStyle: TextStyle(color: accentGreen.withValues(alpha: 0.5)),
-            prefixIcon: const Icon(
+            hintStyle: TextStyle(
+              color: theme.primaryColor.withValues(alpha: 0.5),
+            ),
+            prefixIcon: Icon(
               Icons.search_rounded,
-              color: primaryGreen,
+              color: theme.primaryColor,
               size: 22,
             ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                Icons.clear,
+                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                size: 20,
+              ),
+              onPressed: () => _searchController.clear(),
+            ),
             filled: true,
-            fillColor: surfaceDark,
+            fillColor: isDark ? const Color(0xFF162A19) : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(15),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
+              borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
@@ -272,8 +310,7 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
     );
   }
 
-  /// Horizontal list of category filter chips
-  Widget _buildCategoryChips() {
+  Widget _buildCategoryChips(ThemeData theme, bool isDark) {
     final categories = ['All', 'Beginner', 'Intermediate', 'Advanced'];
     return SizedBox(
       height: 55,
@@ -304,16 +341,19 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
               padding: const EdgeInsets.symmetric(horizontal: 22),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isActive ? primaryGreen : surfaceDark,
+                color: isActive
+                    ? theme.primaryColor
+                    : (isDark ? const Color(0xFF162A19) : Colors.grey[300]),
                 borderRadius: BorderRadius.circular(12),
-                border: isActive
-                    ? null
-                    : Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Text(
                 categories[index],
                 style: TextStyle(
-                  color: isActive ? backgroundDark : Colors.white70,
+                  color: isActive
+                      ? Colors.black
+                      : theme.textTheme.bodyLarge?.color?.withValues(
+                          alpha: 0.7,
+                        ),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -325,38 +365,6 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
     );
   }
 
-  /// Reusable quick filter button component
-  Widget _buildQuickFilter(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: surfaceDark.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: primaryGreen, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: Colors.grey,
-            size: 16,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Individual yoga pose card component
   Widget _buildPoseCard(
     BuildContext context,
     String title,
@@ -365,6 +373,8 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
     String level,
     Color levelColor,
     String image,
+    ThemeData theme,
+    bool isDark,
   ) {
     return GestureDetector(
       onTap: () {
@@ -379,7 +389,7 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: surfaceDark,
+                color: theme.cardColor,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),
@@ -394,7 +404,6 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
               ),
               child: Stack(
                 children: [
-                  // Difficulty Level Badge
                   Positioned(
                     top: 10,
                     right: 10,
@@ -404,7 +413,9 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: backgroundDark.withValues(alpha: 0.8),
+                        color: theme.scaffoldBackgroundColor.withValues(
+                          alpha: 0.8,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: levelColor.withValues(alpha: 0.5),
@@ -430,8 +441,8 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: theme.textTheme.bodyLarge?.color,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -439,11 +450,18 @@ class _PoseLibraryPageState extends State<PoseLibraryPage> {
           const SizedBox(height: 2),
           Row(
             children: [
-              const Icon(Icons.access_time, color: accentGreen, size: 12),
+              Icon(
+                Icons.access_time,
+                color: theme.primaryColor.withValues(alpha: 0.7),
+                size: 12,
+              ),
               const SizedBox(width: 4),
               Text(
                 '$sub • $time',
-                style: const TextStyle(color: accentGreen, fontSize: 11),
+                style: TextStyle(
+                  color: theme.primaryColor.withValues(alpha: 0.7),
+                  fontSize: 11,
+                ),
               ),
             ],
           ),

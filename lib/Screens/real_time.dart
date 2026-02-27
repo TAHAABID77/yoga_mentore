@@ -1,37 +1,32 @@
 import 'package:flutter/material.dart';
 
+/// Yeh page real-time yoga feedback dikhane ke liye hai
 class YogaPracticePage extends StatelessWidget {
   const YogaPracticePage({super.key});
-
-  // Theme constants
-  static const Color primaryGreen = Color(0xFF13EC37);
-  static const Color backgroundDark = Color(0xFF102213);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundDark,
       body: Stack(
         children: [
-          // --- Asset Background Image ---
+          // --- Background Image aur Overlay ---
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  // Yahan aapka asset path use ho raha hai
-                  image: AssetImage('assets/images/realtime_bg.avif'),
+                  // Switched to a supported JPEG format for the background
+                  image: AssetImage('assets/images/pexels-photo-3823039.jpeg'),
                   fit: BoxFit.cover,
                 ),
               ),
               child: Container(
-                // Dark overlay taake buttons saaf nazar aayein
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.2),
-                      Colors.black.withOpacity(0.8),
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.9),
                     ],
                   ),
                 ),
@@ -43,7 +38,7 @@ class YogaPracticePage extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                // Header
+                // Page ka header: Logo aur Title
                 Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Row(
@@ -51,7 +46,7 @@ class YogaPracticePage extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.self_improvement,
-                        color: primaryGreen,
+                        color: Color(0xFF13EC37),
                         size: 32,
                       ),
                       const SizedBox(width: 10),
@@ -70,19 +65,23 @@ class YogaPracticePage extends StatelessWidget {
 
                 const Spacer(),
 
-                // Bottom Buttons
+                // Bottom Buttons Section
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 32.0,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Upload Button
                       SizedBox(
                         width: double.infinity,
                         height: 60,
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Implement upload functionality
+                          },
                           icon: const Icon(
                             Icons.cloud_upload_outlined,
                             color: Colors.white,
@@ -108,12 +107,13 @@ class YogaPracticePage extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      // Real-time Button
                       SizedBox(
                         width: double.infinity,
                         height: 60,
                         child: ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Implement real-time camera feed
+                          },
                           icon: const Icon(
                             Icons.videocam_outlined,
                             color: Colors.black,
@@ -126,7 +126,8 @@ class YogaPracticePage extends StatelessWidget {
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryGreen,
+                            backgroundColor: const Color(0xFF13EC37),
+                            elevation: 5,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -134,7 +135,7 @@ class YogaPracticePage extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),

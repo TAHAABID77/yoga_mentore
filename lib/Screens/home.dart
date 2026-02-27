@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:yoga_mentore/Providers/user_provider.dart';
+import 'dart:io';
+import 'userprofile.dart';
 
 /// The main landing screen after login, displaying challenges and recommendations
 class HomeScreen extends StatefulWidget {
-  final String userName;
-
-  const HomeScreen({super.key, this.userName = "Yogi"});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Theme constants for consistent styling
-  static const Color primary = Color(0xFF13EC37);
-  static const Color bgDark = Color(0xFF102213);
-  static const Color cardDark = Color(0xFF19331E);
-  static const Color textMuted = Color(0xFF92C99B);
-
   // Reactive state for progress
   double _progress = 0.0;
 
@@ -56,20 +52,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = userProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: bgDark,
       body: SafeArea(
         child: Column(
           children: [
-            _topBar(), // User profile and notifications
+            _topBar(userProvider, theme),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 80),
                 child: Column(
                   children: [
-                    _dailyChallengeSlider(), // Horizontal challenge slider
-                    _continuePractice(), // Current progress tracker
-                    _weeklyActivity(), // Activity visualization
+                    _dailyChallengeSlider(theme, isDark),
+                    _continuePractice(theme, isDark),
+                    _weeklyActivity(theme, isDark),
                   ],
                 ),
               ),
@@ -81,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ---------------- TOP BAR ----------------
-  Widget _topBar() {
+  Widget _topBar(UserProvider userProvider, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -89,33 +88,39 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           InkWell(
             onTap: () {
-              // Action for profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const YogaProfilePage(),
+                ),
+              );
             },
             borderRadius: BorderRadius.circular(30),
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 22,
-                  backgroundImage: NetworkImage(
-                    "https://i.pravatar.cc/150?img=12",
-                  ),
+                  backgroundImage:
+                      userProvider.profileImage.startsWith('assets/')
+                      ? AssetImage(userProvider.profileImage) as ImageProvider
+                      : FileImage(File(userProvider.profileImage)),
                 ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "WELCOME",
                       style: TextStyle(
-                        color: textMuted,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.7),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      widget.userName,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      userProvider.name,
+                      style: TextStyle(
+                        color: theme.textTheme.bodyLarge?.color,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -131,9 +136,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SnackBar(content: Text("No new notifications")),
               );
             },
-            icon: const CircleAvatar(
-              backgroundColor: cardDark,
-              child: Icon(Icons.notifications_outlined, color: Colors.white),
+            icon: CircleAvatar(
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              child: Icon(
+                Icons.notifications_outlined,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
         ],
@@ -142,16 +150,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ---------------- DAILY CHALLENGE ----------------
-  Widget _dailyChallengeSlider() {
+  Widget _dailyChallengeSlider(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
             "Daily Challenge",
             style: TextStyle(
-              color: Colors.white,
+              color: theme.textTheme.titleLarge?.color,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -179,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 220,
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
-                    color: cardDark,
+                    color: isDark ? const Color(0xFF19331E) : Colors.grey[200],
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -203,15 +211,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               pose["title"],
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: theme.textTheme.bodyLarge?.color,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               pose["desc"],
-                              style: const TextStyle(
-                                color: textMuted,
+                              style: TextStyle(
+                                color: theme.textTheme.bodySmall?.color,
                                 fontSize: 12,
                               ),
                             ),
@@ -230,22 +238,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ---------------- CONTINUE PRACTICE ----------------
-  Widget _continuePractice() {
+  Widget _continuePractice(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: cardDark,
+          color: isDark ? const Color(0xFF19331E) : Colors.grey[200],
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Continue Practice",
               style: TextStyle(
-                color: Colors.white,
+                color: theme.textTheme.titleLarge?.color,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -253,13 +261,17 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 10),
             Text(
               "You have completed ${(_progress * 100).toInt()}% of today’s challenge",
-              style: const TextStyle(color: textMuted),
+              style: TextStyle(
+                color: theme.textTheme.bodyMedium?.color?.withValues(
+                  alpha: 0.7,
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             LinearProgressIndicator(
               value: _progress,
-              backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(primary),
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
               minHeight: 6,
             ),
           ],
@@ -269,23 +281,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ---------------- WEEKLY ACTIVITY ----------------
-  Widget _weeklyActivity() {
+  Widget _weeklyActivity(ThemeData theme, bool isDark) {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: cardDark,
+          color: isDark ? const Color(0xFF19331E) : Colors.grey[200],
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Weekly Activity",
               style: TextStyle(
-                color: Colors.white,
+                color: theme.textTheme.titleLarge?.color,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -300,7 +312,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: InkWell(
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Details for $d coming soon!")),
+                            SnackBar(
+                              content: Text("Details for $d coming soon!"),
+                            ),
                           );
                         },
                         child: Column(
@@ -309,15 +323,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               width: 12,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: primary.withValues(alpha: 0.25),
+                                color: theme.primaryColor.withValues(
+                                  alpha: 0.25,
+                                ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               d,
-                              style: const TextStyle(
-                                color: textMuted,
+                              style: TextStyle(
+                                color: theme.textTheme.bodySmall?.color,
                                 fontSize: 10,
                               ),
                             ),
