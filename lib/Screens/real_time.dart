@@ -1,8 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// Yeh page real-time yoga feedback dikhane ke liye hai
-class YogaPracticePage extends StatelessWidget {
+class YogaPracticePage extends StatefulWidget {
   const YogaPracticePage({super.key});
+
+  @override
+  State<YogaPracticePage> createState() => _YogaPracticePageState();
+}
+
+class _YogaPracticePageState extends State<YogaPracticePage> {
+  final ImagePicker _picker = ImagePicker();
+
+  /// Gallery se image pick karta hai
+  Future<void> _pickImageFromGallery() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      // Image selected: image.path
+      debugPrint('Gallery image selected: ${image.path}');
+    }
+  }
+
+  /// Camera open karta hai real-time feedback ke liye
+  Future<void> _openCamera() async {
+    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+    if (photo != null) {
+      // Photo captured: photo.path
+      debugPrint('Camera photo captured: ${photo.path}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +105,7 @@ class YogaPracticePage extends StatelessWidget {
                         width: double.infinity,
                         height: 60,
                         child: OutlinedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement upload functionality
-                          },
+                          onPressed: _pickImageFromGallery,
                           icon: const Icon(
                             Icons.cloud_upload_outlined,
                             color: Colors.white,
@@ -111,9 +135,7 @@ class YogaPracticePage extends StatelessWidget {
                         width: double.infinity,
                         height: 60,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement real-time camera feed
-                          },
+                          onPressed: _openCamera,
                           icon: const Icon(
                             Icons.videocam_outlined,
                             color: Colors.black,

@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 
 /// Yeh screen user ke yoga safar (progress) aur statistics ko dikhaati hai
-class YogaProgressPage extends StatelessWidget {
+class YogaProgressPage extends StatefulWidget {
   const YogaProgressPage({super.key});
+
+  @override
+  State<YogaProgressPage> createState() => _YogaProgressPageState();
+}
+
+class _YogaProgressPageState extends State<YogaProgressPage> {
+  // Weekly bar heights — all set to 50%
+  final List<double> _barHeights = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,14 +75,6 @@ class YogaProgressPage extends StatelessWidget {
                       '+5%',
                     ),
                 ]),
-              ),
-            ),
-
-            // Health metrics overview - Calorie aur Streak card
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: _buildStreakCard(context, isWideScreen),
               ),
             ),
 
@@ -147,6 +152,8 @@ class YogaProgressPage extends StatelessWidget {
     final theme = Theme.of(context);
     final primaryColor = theme.primaryColor;
 
+    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
     return Container(
       padding: EdgeInsets.all(isWideScreen ? 32 : 24),
       decoration: BoxDecoration(
@@ -176,7 +183,7 @@ class YogaProgressPage extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '12 Sessions',
+            '0 Sessions',
             style: TextStyle(
               color: theme.colorScheme.onSurface,
               fontSize: 28,
@@ -188,14 +195,14 @@ class YogaProgressPage extends StatelessWidget {
               Icon(Icons.trending_up, color: primaryColor, size: 16),
               const SizedBox(width: 4),
               Text(
-                '+15% ',
+                '0% ',
                 style: TextStyle(
                   color: primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                'Oct 18 - Oct 24',
+                'This Week',
                 style: TextStyle(
                   color: theme.colorScheme.onSurfaceVariant.withValues(
                     alpha: 0.6,
@@ -212,15 +219,15 @@ class YogaProgressPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildBar(context, 0.3, 'MON', isWideScreen),
-                _buildBar(context, 0.9, 'TUE', isWideScreen, isFull: true),
-                _buildBar(context, 0.65, 'WED', isWideScreen),
-                _buildBar(context, 0.8, 'THU', isWideScreen, isFull: true),
-                _buildBar(context, 0.25, 'FRI', isWideScreen),
-                _buildBar(context, 0.55, 'SAT', isWideScreen),
-                _buildBar(context, 0.75, 'SUN', isWideScreen, isFull: true),
-              ],
+              children: List.generate(7, (index) {
+                return _buildBar(
+                  context,
+                  _barHeights[index],
+                  days[index],
+                  isWideScreen,
+                  isFull: _barHeights[index] > 0.7,
+                );
+              }),
             ),
           ),
         ],
@@ -228,7 +235,7 @@ class YogaProgressPage extends StatelessWidget {
     );
   }
 
-  /// Individual bar component for the activity chart
+  /// Individual bar component for the activity chart (animated)
   Widget _buildBar(
     BuildContext context,
     double heightFactor,
@@ -244,7 +251,9 @@ class YogaProgressPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOut,
             width: isWideScreen ? 40 : 32,
             height: 100 * heightFactor,
             decoration: BoxDecoration(
@@ -336,72 +345,6 @@ class YogaProgressPage extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Card highlighting calorie and streak information
-  Widget _buildStreakCard(BuildContext context, bool isWideScreen) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
-        boxShadow: [
-          if (theme.brightness == Brightness.light)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.local_fire_department, color: Colors.orange),
-                  const SizedBox(width: 8),
-                  Text(
-                    'CALORIES BURNED'.toUpperCase(),
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.7,
-                      ),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const Text(
-                'Daily Streak: 4',
-                style: TextStyle(
-                  color: Colors.orange,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '1,240 kcal',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ),
         ],
       ),
