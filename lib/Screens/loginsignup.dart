@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yoga_mentore/Providers/user_provider.dart';
 import 'main_layout.dart';
+import 'admin_dashboard.dart';
 
 /// Screen handling both Login and Sign-up functionality (AuthScreen se rename kiya gaya hai)
 class LoginSignupScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
 
   // Controllers for text input fields - Text fields ka data access krne ke liye
   final TextEditingController _loginEmail = TextEditingController();
+  final TextEditingController _loginPassword = TextEditingController();
   final TextEditingController _signupName = TextEditingController();
   final TextEditingController _signupPass = TextEditingController();
 
@@ -116,6 +118,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
           _field(
             hint: "Password",
             icon: Icons.lock,
+            controller: _loginPassword,
             obscure: _loginObscure,
             toggle: () => setState(() => _loginObscure = !_loginObscure),
             validator: (v) =>
@@ -123,17 +126,29 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
           ),
           const SizedBox(height: 24),
           _mainButton("Login", () {
-            // Basic validation check before navigation - Validation ke baad main screen par lejana
+            // Validation ke baad check karo — admin hai ya normal user
             if (_loginKey.currentState!.validate()) {
-              final name = _loginEmail.text.split('@')[0];
-              Provider.of<UserProvider>(
-                context,
-                listen: false,
-              ).updateName(name);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const MainLayout()),
-              );
+              final email = _loginEmail.text.trim();
+              final password = _loginPassword.text.trim();
+
+              // Admin credentials check
+              if (email == 'Admin00@gmail.com' && password == 'Admin001') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminDashboard()),
+                );
+              } else {
+                // Normal user — home page
+                final name = email.split('@')[0];
+                Provider.of<UserProvider>(
+                  context,
+                  listen: false,
+                ).updateName(name);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MainLayout()),
+                );
+              }
             }
           }),
         ],
