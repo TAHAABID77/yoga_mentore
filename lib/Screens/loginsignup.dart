@@ -134,6 +134,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
               // Admin credentials check
               if (email == 'Admin00@gmail.com' && password == 'Admin001') {
                 Navigator.pushReplacement(
+                  
                   context,
                   MaterialPageRoute(builder: (_) => const AdminDashboard()),
                 );
